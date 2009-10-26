@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 require "open-uri"
 require "json"
 
@@ -21,12 +22,22 @@ class RakutenWebService
 
   # ISBN コードに対応する情報を返す
   def isbn(isbn)
-    book(isbn) || foreign_book(isbn)
+    begin
+      book(isbn)
+    rescue NotFound
+      foreign_book(isbn)
+    end
   end
 
   # JAN コードに対応する情報を返す
   def jan(jan)
-    cd(jan) || dvd(jan) || magazine(jan) || game(jan) || software(jan)
+    methods = [:cd, :dvd, :magazine, :game, :software]
+    begin
+      method(methods.shift).call(jan)
+    rescue NotFound
+      raise if methods.empty?
+      retry
+    end
   end
 
   # 楽天商品コードに対応する情報を返す
